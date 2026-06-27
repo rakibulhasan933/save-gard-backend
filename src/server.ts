@@ -67,7 +67,7 @@ async function main() {
   await startLiveScreenRequestListener();
 
   server.listen(httpPort, "0.0.0.0", () => {
-    if (dev) {
+    if (!dev) {
       console.log(`> Backend API ready on http://localhost:${httpPort}`);
       console.log(`> WebSocket signaling ready on ws://localhost:${httpPort}/ws`);
     } else {
