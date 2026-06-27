@@ -67,8 +67,13 @@ async function main() {
   await startLiveScreenRequestListener();
 
   server.listen(httpPort, "0.0.0.0", () => {
-    console.log(`> Backend API ready on http://localhost:${httpPort}`);
-    console.log(`> WebSocket signaling ready on ws://localhost:${httpPort}/ws`);
+    if (dev) {
+      console.log(`> Backend API ready on http://localhost:${httpPort}`);
+      console.log(`> WebSocket signaling ready on ws://localhost:${httpPort}/ws`);
+    } else {
+      console.log(`> Backend API ready on http://save-gard-api.duckdns.org`);
+      console.log(`> WebSocket signaling ready on wss://save-gard-api.duckdns.org/ws`);
+    }
   });
 }
 
