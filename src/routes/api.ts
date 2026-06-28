@@ -13,24 +13,14 @@ export function createApiRouter(httpPort: number) {
     response.json({ ok: true });
   });
 
- const isProduction = process.env.NODE_ENV === "production";
-
-const apiUrl = isProduction
-  ? "https://save-gard-api.duckdns.org"
-  : `http://localhost:${httpPort}`;
-
-const wsUrl = isProduction
-  ? "wss://save-gard-api.duckdns.org/ws"
-  : `ws://localhost:${httpPort}/ws`;
-
-router.get("/", (_request, response) => {
-  response.json({
-    service: "super-sefty-backend",
-    status: "ok",
-    apiUrl,
-    wsUrl,
+  router.get("/", (_request, response) => {
+    response.json({
+      service: "super-sefty-backend",
+      status: "ok",
+      apiUrl: `http://localhost:${httpPort}`,
+      wsUrl: `ws://localhost:${httpPort}/ws`
+    });
   });
-});
 
   router.use("/auth", authRouter);
   router.use("/children", childrenRouter);

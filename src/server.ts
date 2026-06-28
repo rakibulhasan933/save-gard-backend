@@ -17,9 +17,7 @@ const dev = process.env.NODE_ENV !== "production";
 
 for (const file of envFiles(dev)) {
   const localPath = resolve(process.cwd(), file);
-  if (existsSync(localPath)) {
-    loadDotenv({ path: localPath, override: false });
-  }
+  if (existsSync(localPath)) loadDotenv({ path: localPath, override: false });
 }
 
 void main().catch((error) => {
@@ -34,22 +32,13 @@ async function main() {
   try {
     await db.execute(sql`select 1`);
   } catch (error) {
-    throw new Error(
-      `Unable to connect to DATABASE_URL at startup: ${formatStartupError(error)}`
-    );
+    throw new Error(`Unable to connect to DATABASE_URL at startup: ${formatStartupError(error)}`);
   }
 
   const [
     { createApiRouter },
-    {
-      createSignalingServer,
-      handleUpgrade,
-      startLiveScreenRequestListener,
-    },
-  ] = await Promise.all([
-    import("./routes/api"),
-    import("./realtime/signalingServer"),
-  ]);
+    { createSignalingServer, handleUpgrade, startLiveScreenRequestListener }
+  ] = await Promise.all([import("./routes/api"), import("./realtime/signalingServer")]);
 
   const signalingServer = createSignalingServer({ path: "/ws" });
 
@@ -66,39 +55,20 @@ async function main() {
   });
 
   const apiRouter = createApiRouter(httpPort);
-
   app.use("/", apiRouter);
   app.use("/api", apiRouter);
 
   const server = createServer(app);
 
   server.on("upgrade", (request, socket, head) => {
-    handleUpgrade(
-      signalingServer,
-      request,
-      socket as import("node:net").Socket,
-      head,
-      "/ws"
-    );
+    handleUpgrade(signalingServer, request, socket as import("node:net").Socket, head, "/ws");
   });
 
   await startLiveScreenRequestListener();
 
   server.listen(httpPort, "0.0.0.0", () => {
-    const publicUrl =
-      process.env.PUBLIC_URL ??
-      (dev
-        ? `http://localhost:${httpPort}`
-        : `https://save-gard-api.duckdns.org`);
-
-    const wsUrl = publicUrl.replace(/^http/, "ws") + "/ws";
-
-    console.log("========================================");
-    console.log(`🚀 Backend API ready: ${publicUrl}`);
-    console.log(`🔌 WebSocket ready: ${wsUrl}`);
-    console.log(`🌍 Environment: ${dev ? "development" : "production"}`);
-    console.log(`📦 Port: ${httpPort}`);
-    console.log("========================================");
+    console.log(`> Backend API ready on http://localhost:${httpPort}`);
+    console.log(`> WebSocket signaling ready on ws://localhost:${httpPort}/ws`);
   });
 }
 

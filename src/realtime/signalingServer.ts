@@ -186,12 +186,10 @@ async function handleMessage(ws: WebSocket, data: RawData) {
 
   const parsed = clientMessageSchema.safeParse(raw);
   if (!parsed.success) {
-    if (raw && typeof raw === "object" && (raw as { type?: unknown }).type === "STATUS_UPDATE") {
-      console.warn("[ws] Rejected malformed STATUS_UPDATE", {
-        issues: parsed.error.issues,
-        raw
-      });
-    }
+    console.warn("[ws] Rejected malformed client message", {
+      issues: parsed.error.issues,
+      raw
+    });
     sendError(ws, "INVALID_MESSAGE", "Message type or payload is invalid");
     return;
   }
