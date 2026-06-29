@@ -46,8 +46,13 @@ async function main() {
   app.disable("x-powered-by");
 
   app.use((request, response, next) => {
+    const corsHeaders = buildCorsHeaders(request);
+    for (const [key, value] of Object.entries(corsHeaders)) {
+      response.setHeader(key, value);
+    }
+
     if ((request.method ?? "GET").toUpperCase() === "OPTIONS") {
-      sendNoContent(response, 204, buildCorsHeaders(request));
+      sendNoContent(response, 204, corsHeaders);
       return;
     }
 

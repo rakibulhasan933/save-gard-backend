@@ -98,7 +98,7 @@ export function serializeCookie(name: string, value: string, options: CookieOpti
 }
 
 export function getAllowedOrigins() {
-  const raw = process.env.CORS_ORIGIN ?? process.env.FRONTEND_ORIGIN ?? "http://localhost:3000";
+  const raw = process.env.CORS_ORIGIN ?? process.env.FRONTEND_ORIGIN ?? "";
   return raw
     .split(",")
     .map((value) => value.trim())
@@ -106,21 +106,31 @@ export function getAllowedOrigins() {
 }
 
 export function buildCorsHeaders(request: IncomingMessage): Record<string, string> {
-  const origin = request.headers.origin;
-  if (!origin) return {};
+  const origin = getHeader(request.headers, "origin");
+  const isProduction = process.env.NODE_ENV === "production";
+  const allowOrigin = isProduction ? getAllowedProductionOrigin(origin) : origin ?? "*";
 
-  const allowedOrigins = getAllowedOrigins();
-  if (!allowedOrigins.includes(origin)) {
-    return {};
-  }
+  if (!allowOrigin) return {};
+
+  const requestHeaders = getHeader(request.headers, "access-control-request-headers");
 
   return {
-    "access-control-allow-origin": origin,
+    "access-control-allow-origin": allowOrigin,
     "access-control-allow-credentials": "true",
-    "access-control-allow-headers": "Content-Type, Authorization",
+    "access-control-allow-headers": requestHeaders ?? "Content-Type, Authorization, X-Requested-With",
     "access-control-allow-methods": "GET,POST,PATCH,DELETE,OPTIONS",
+    "access-control-max-age": "86400",
     vary: "Origin"
   };
+}
+
+function getAllowedProductionOrigin(origin: string | null) {
+  if (!origin) return null;
+
+  const allowedOrigins = getAllowedOrigins();
+  if (!allowedOrigins.includes(origin)) return null;
+
+  return origin;
 }
 
 export function mergeHeaders(
