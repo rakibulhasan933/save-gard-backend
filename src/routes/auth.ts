@@ -38,7 +38,7 @@ async function handleLogin(request: IncomingMessage, response: ServerResponse) {
     const headers = mergeHeaders(corsHeaders, {
       "set-cookie": createSessionCookie(token)
     });
-    sendJson(response, 200, { admin: { id: admin.id, email: admin.email } }, headers);
+    sendJson(response, 200, { admin: { id: admin.id, email: admin.email }, adminToken: token, token }, headers);
   } catch (error) {
     handleHandlerError(error, response, corsHeaders);
   }
@@ -65,7 +65,7 @@ async function handleRegister(request: IncomingMessage, response: ServerResponse
     const headers = mergeHeaders(corsHeaders, {
       "set-cookie": createSessionCookie(token)
     });
-    sendJson(response, 201, { admin }, headers);
+    sendJson(response, 201, { admin, adminToken: token, token }, headers);
   } catch (error) {
     handleHandlerError(error, response, corsHeaders);
   }

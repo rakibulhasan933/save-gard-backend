@@ -46,6 +46,11 @@ export function registerChildSocket(childId: string, deviceUuid: string, ws: Web
   devices.set(deviceUuid, ws);
   childSockets.set(childId, devices);
   socketContexts.set(ws, { role: "child", childId, deviceUuid, ws });
+  console.info("[ws] child registered", {
+    childId,
+    deviceUuid,
+    connectedDevicesForChild: devices.size
+  });
 }
 
 export function unregisterSocket(ws: WebSocket) {
@@ -115,9 +120,15 @@ export function broadcastToAdmin(adminId: string, message: ServerMessage) {
 
 export function broadcastToChild(childId: string, message: ServerMessage) {
   let delivered = 0;
-  for (const ws of getChildSockets(childId)) {
+  const sockets = getChildSockets(childId);
+  for (const ws of sockets) {
     if (sendJson(ws, message)) delivered += 1;
   }
+  console.info("[ws] broadcast to child", {
+    childId,
+    type: message.type,
+    connectedSockets: sockets.length,
+    delivered
+  });
   return delivered;
 }
-

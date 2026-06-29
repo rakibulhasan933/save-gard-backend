@@ -50,6 +50,11 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
   }
 }
 
+export function getSessionTokenFromHeaders(headers: IncomingHttpHeaders) {
+  const cookies = parseCookies(getHeader(headers, "cookie") ?? undefined);
+  return cookies[SESSION_COOKIE] ?? null;
+}
+
 export function createSessionCookie(token: string) {
   return serializeCookie(SESSION_COOKIE, token, {
     httpOnly: true,
@@ -73,8 +78,7 @@ export function clearSessionCookie() {
 export async function getCurrentAdminFromHeaders(
   headers: IncomingHttpHeaders
 ): Promise<Pick<Admin, "id" | "email"> | null> {
-  const cookies = parseCookies(getHeader(headers, "cookie") ?? undefined);
-  const token = cookies[SESSION_COOKIE];
+  const token = getSessionTokenFromHeaders(headers);
   if (!token) return null;
 
   const payload = await verifySessionToken(token);

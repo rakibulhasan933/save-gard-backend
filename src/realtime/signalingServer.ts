@@ -25,7 +25,7 @@ import {
   type ServerMessage,
   type WebRtcSignalMessage
 } from "./messageTypes";
-import { verifySessionToken } from "../lib/auth";
+import { getSessionTokenFromHeaders, verifySessionToken } from "../lib/auth";
 import { verifyChildToken } from "../lib/childToken";
 
 export type SignalingServerOptions = {
@@ -82,15 +82,11 @@ export function handleUpgrade(
 async function authenticateFromRequest(ws: WebSocket, request: IncomingMessage) {
   const url = new URL(request.url ?? "/", "http://localhost");
   const role = url.searchParams.get("role");
-  const token = url.searchParams.get("token");
+  const queryToken = url.searchParams.get("token");
   const deviceUuid = url.searchParams.get("deviceUuid");
+  const token = role === "admin" ? queryToken ?? getSessionTokenFromHeaders(request.headers) : queryToken;
 
   if (!role) return false;
-
-  if (role === "admin" && !token) {
-    ws.close(4002, "Invalid auth parameters");
-    return true;
-  }
 
   if (!token) return false;
 

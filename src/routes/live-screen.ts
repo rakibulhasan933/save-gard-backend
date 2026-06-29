@@ -4,6 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "../db";
 import { liveScreenSessions } from "../db/schema";
 import { notifyLiveScreenRequest } from "../lib/realtime-publisher";
+import { signalLiveScreenRequest } from "../realtime/signalingServer";
 import { buildCorsHeaders, readJsonBody, sendError, sendJson } from "../lib/http";
 import { endLiveScreenSchema, failLiveScreenSchema } from "../lib/validators";
 import { getOwnedChild, getOwnedLiveScreenSession } from "../lib/data-access";
@@ -59,13 +60,24 @@ async function handleRequestLiveScreen(request: IncomingMessage, response: Serve
       .values({ childId, adminId: admin.id, status: "requested" })
       .returning();
 
-    await notifyLiveScreenRequest({
+    const signaling = await signalLiveScreenRequest(session.id);
+    console.info("[live-screen] request signaled", {
       sessionId: session.id,
       childId: child.id,
-      adminId: admin.id
+      adminId: admin.id,
+      delivered: signaling.delivered,
+      reason: signaling.reason
     });
 
-    sendJson(response, 201, { session }, corsHeaders);
+    if (signaling.delivered === 0) {
+      await notifyLiveScreenRequest({
+        sessionId: session.id,
+        childId: child.id,
+        adminId: admin.id
+      });
+    }
+
+    sendJson(response, 201, { session, signaling }, corsHeaders);
   } catch (error) {
     handleHandlerError(error, response as ServerResponse, corsHeaders);
   }
