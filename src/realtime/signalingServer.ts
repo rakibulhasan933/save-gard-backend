@@ -283,7 +283,14 @@ async function handleLiveScreenAccepted(
     .set({ status: "active", startedAt: new Date(), reason: null })
     .where(eq(liveScreenSessions.id, session.id));
 
-  broadcastToAdmin(session.adminId, message);
+  const delivered = broadcastToAdmin(session.adminId, message);
+  console.info("[ws] LIVE_SCREEN_ACCEPTED relayed", {
+    sessionId: session.id,
+    childId: session.childId,
+    adminId: session.adminId,
+    deviceUuid: context.deviceUuid,
+    delivered
+  });
 }
 
 async function handleLiveScreenRejected(
@@ -368,6 +375,13 @@ async function relayWebRtcSignal(ws: WebSocket, message: WebRtcSignalMessage) {
     return;
   }
 
+  console.info("[ws] WebRTC signal relay", {
+    type: message.type,
+    sessionId: session.id,
+    fromRole: message.payload.fromRole,
+    adminId: session.adminId,
+    childId: session.childId
+  });
   relayToOtherSide(context, session.adminId, session.childId, session.id, message);
 }
 
@@ -379,7 +393,14 @@ function relayToOtherSide(
   message: ServerMessage
 ) {
   if (context.role === "child") {
-    broadcastToAdmin(adminId, message);
+    const delivered = broadcastToAdmin(adminId, message);
+    console.info("[ws] relayed child message to admin", {
+      type: message.type,
+      sessionId,
+      adminId,
+      childId,
+      delivered
+    });
     return;
   }
 
@@ -388,10 +409,23 @@ function relayToOtherSide(
 
   if (!childSocket) {
     sendError(context.ws, "CHILD_OFFLINE", "No accepted child device is connected for this session");
+    console.warn("[ws] admin message not relayed; child target unavailable", {
+      type: message.type,
+      sessionId,
+      adminId,
+      childId
+    });
     return;
   }
 
-  sendJson(childSocket, message);
+  const delivered = sendJson(childSocket, message);
+  console.info("[ws] relayed admin message to child", {
+    type: message.type,
+    sessionId,
+    adminId,
+    childId,
+    delivered
+  });
 }
 
 export async function signalLiveScreenRequest(
