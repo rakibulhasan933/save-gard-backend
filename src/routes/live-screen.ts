@@ -11,9 +11,10 @@ import { getOwnedChild, getOwnedLiveScreenSession } from "../lib/data-access";
 import { handleHandlerError, requireAdmin, wrap } from "./shared";
 
 const router = Router();
+export const childLiveScreenRouter = Router();
 
-router.get("/:childId/live-screen", wrap(handleListLiveScreenSessions));
-router.post("/:childId/live-screen/request", wrap(handleRequestLiveScreen));
+childLiveScreenRouter.get("/:childId/live-screen", wrap(handleListLiveScreenSessions));
+childLiveScreenRouter.post("/:childId/live-screen/request", wrap(handleRequestLiveScreen));
 router.patch("/:sessionId/start", wrap(handleMarkLiveScreenActive));
 router.patch("/:sessionId/end", wrap(handleEndLiveScreen));
 router.patch("/:sessionId/fail", wrap(handleFailLiveScreen));

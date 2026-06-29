@@ -2,7 +2,7 @@ import { Router } from "express";
 import authRouter from "./auth";
 import childrenRouter from "./children";
 import pairRouter from "./pair";
-import liveScreenRouter from "./live-screen";
+import liveScreenRouter, { childLiveScreenRouter } from "./live-screen";
 import appRulesRouter from "./app-rules";
 import webRulesRouter from "./web-rules";
 
@@ -24,6 +24,7 @@ export function createApiRouter(httpPort: number) {
 
   router.use("/auth", authRouter);
   router.use("/children", childrenRouter);
+  router.use("/children", childLiveScreenRouter);
   router.use("/child", pairRouter);
   router.use("/live-screen", liveScreenRouter);
   router.use("/app-rules", appRulesRouter);
